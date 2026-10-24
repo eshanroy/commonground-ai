@@ -1,0 +1,30 @@
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env
+backend/.venv/
+
+# Python cache and test artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Frontend dependencies and production build
+frontend/node_modules/
+frontend/dist/
+
+# Local environment and editor files
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Temporary backups and intermediate implementation files
+*.backup
+*.step*-backup.*
+*-backup*
+*backup*
