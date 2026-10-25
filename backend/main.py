@@ -2,18 +2,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from agent import run_group_planning_agent
 from models import GroupPlanRequest
-from recommendations import (
-    discover_qloo_places,
-    recommend_experiences,
-)
+from recommendations import recommend_experiences
+
 
 app = FastAPI(
     title="CommonGround AI API",
     description=(
         "Cultural intelligence for group experiences, "
-        "with transparent recommendation scoring and "
-        "Qloo-powered place discovery."
+        "with transparent recommendation scoring, "
+        "Qloo-powered place discovery, and agent-driven "
+        "discovery planning and evaluation."
     ),
     version="0.3.0",
 )
@@ -53,10 +53,16 @@ def health():
 
 @app.post("/recommendations")
 def get_recommendations(request: GroupPlanRequest):
+    # Keep local recommendations independent of Qloo availability.
     recommendations = recommend_experiences(request)
-    qloo_discovery = discover_qloo_places(request)
+
+    # The agent plans discovery, evaluates the results, and may broaden
+    # the search when the initial available results are insufficient.
+    agent_result = run_group_planning_agent(request)
+    qloo_discovery = agent_result["discovery"]
 
     return {
+        # Existing response fields are preserved for frontend compatibility.
         "location": request.location,
         "budget": request.budget,
         "occasion": request.occasion,
@@ -68,4 +74,14 @@ def get_recommendations(request: GroupPlanRequest):
             for recommendation in recommendations
         ],
         "qloo_discovery": qloo_discovery,
+
+        # New agent execution metadata.
+        "agent": {
+            "name": "CommonGround Group Planning Agent",
+            "status": agent_result["agent_status"],
+            "plan": agent_result["plan"],
+            "attempt_count": agent_result["attempt_count"],
+            "attempts": agent_result["attempts"],
+            "evaluation": agent_result["evaluation"],
+        },
     }
